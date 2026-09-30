@@ -15,8 +15,18 @@ chmod 600 config.json
 默认读取**当前工作目录**的 `config.json`；其他位置可使用 `./ssgo -config /path/to/config.json`。后台启动：
 
 ```bash
-nohup ./ssgo > ssgo.log 2>&1 &
+nohup ./ssgo > /dev/null 2>&1 &
 ```
+
+运行日志自动写入**当前工作目录**的 `log/YYYY-MM-DD.log`，例如 `log/2026-09-30.log`。目录自动创建，按服务器系统本地时区分日；跨天后的第一条日志自动切换文件，重启当天继续追加，不覆盖历史日志。正常运行不再向终端输出日志；配置错误同样记录到日志文件。日志目录无法创建时启动失败并向终端报错，运行期间写文件失败时退回标准错误输出。
+
+例如从 `/data/www/ss-go` 启动时，日志位于 `/data/www/ss-go/log/`：
+
+```bash
+tail -f "log/$(date +%F).log"
+```
+
+日志暂不自动清理，请按需要保留或删除历史文件。
 
 配置示例（完整示例见 `config.example.json`）：
 

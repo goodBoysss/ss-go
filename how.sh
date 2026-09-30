@@ -1,1 +1,1 @@
-sudo apt-get install git -y && sudo mkdir -p /data/www/ && cd /data/www/ && sudo git clone https://github.com/goodBoysss/ss-go.git && /data/www/ss-go/dist/ssgo-linux-amd64/ssgo
+sudo apt-get install git -y && sudo mkdir -p /data/www/ && cd /data/www/ && sudo git clone https://github.com/goodBoysss/ss-go.git && cd /data/www/ss-go && nohup /data/www/ss-go/dist/ssgo-linux-amd64/ssgo > /dev/null 2>&1 &
