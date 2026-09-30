@@ -1,4 +1,4 @@
-// Package config defines the standard Shadowsocks JSON configuration.
+// Package config defines standard Shadowsocks AEAD and legacy CFB configuration.
 package config
 
 import (
@@ -146,10 +146,10 @@ func normalizeMethod(method string) string {
 	return method
 }
 
-// supportedMethod reports whether the cipher is supported by go-shadowsocks2.
+// supportedMethod reports whether an AEAD method or explicit legacy CFB is supported.
 func supportedMethod(method string) bool {
 	switch method {
-	case "aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305":
+	case "aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305", "aes-256-cfb":
 		return true
 	default:
 		return false

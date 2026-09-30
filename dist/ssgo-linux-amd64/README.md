@@ -1,6 +1,6 @@
 # ss-go
 
-Go 编写的标准 Shadowsocks AEAD TCP 代理，协议实现复用 `github.com/shadowsocks/go-shadowsocks2 v0.1.5`。不再使用自定义用户 ID 或自定义握手。
+Go 编写的标准 Shadowsocks TCP 代理，支持 AEAD 和旧客户端的 AES-256-CFB。AEAD 协议实现复用 `github.com/shadowsocks/go-shadowsocks2 v0.1.5`。不再使用自定义用户 ID 或自定义握手。
 
 ## Linux 服务端
 
@@ -25,8 +25,8 @@ nohup ./ssgo > ssgo.log 2>&1 &
   "mode": "server",
   "server": { "dial_timeout_seconds": 10 },
   "users": [
-    { "listen": ":1818", "password": "replace-with-a-long-random-password", "method": "aes-256-gcm" },
-    { "listen": ":1819", "password": "replace-with-another-long-random-password", "method": "aes-256-gcm" }
+    { "listen": ":1818", "password": "replace-with-a-long-random-password", "method": "aes-256-cfb" },
+    { "listen": ":1819", "password": "replace-with-another-long-random-password", "method": "aes-256-cfb" }
   ]
 }
 ```
@@ -35,21 +35,21 @@ nohup ./ssgo > ssgo.log 2>&1 &
 
 ## 小飞机如何配置
 
-需要支持**标准 Shadowsocks AEAD** 的客户端；截图中具体客户端版本尚未实测。
+支持旧版小飞机的 **aes-256-cfb + origin + plain** 组合；截图中具体客户端版本尚未直接实测。
 
 | 客户端字段 | 配置 |
 | --- | --- |
 | 地址 | 你的服务器 IP 或域名 |
 | 端口 | 对应用户的端口，例如 1818 |
-| 加密方法 | 与服务端一致，例如 aes-256-gcm |
+| 加密方法 | 与服务端一致，当前配置为 aes-256-cfb |
 | 密码 | 对应 users 条目里的 password |
 | SSR 协议（如有） | origin（客户端需支持兼容标准 SS 的模式） |
 | 混淆（如有） | plain / 无 |
 | 协议参数、混淆参数 | 留空 |
 
-不支持截图原配置中的 `aes-256-cfb` 和 `http_simple`。如果加密菜单没有 `aes-256-gcm`，请换用支持 Shadowsocks AEAD 的客户端。已经使用小飞机时，本机无需再运行 ss-go 客户端。
+当前根目录和部署目录配置使用 `aes-256-cfb`，端口为 `1818`。旧客户端保持 `origin` 和 `plain`；不支持 `http_simple`。已经使用小飞机时，本机无需再运行 ss-go 客户端。
 
-支持 `aes-128-gcm`、`aes-256-gcm`、`chacha20-ietf-poly1305`。不支持 SSR 扩展、Shadowsocks 2022、UDP、TUN、混淆或图形界面。
+支持 `aes-256-cfb`、`aes-128-gcm`、`aes-256-gcm`、`chacha20-ietf-poly1305`。CFB 按旧版 Shadowsocks 的 EVP_BytesToKey 派生密钥，每个连接、每个方向使用独立随机 IV；它没有完整性校验或重放保护，仅用于旧客户端兼容。有条件时应使用 AEAD；省略 method 仍默认 aes-256-gcm。不支持 SSR 扩展、Shadowsocks 2022、UDP、TUN、混淆或图形界面。
 
 ## 可选的命令行客户端
 
@@ -62,7 +62,7 @@ nohup ./ssgo > ssgo.log 2>&1 &
     "listen": "127.0.0.1:1080",
     "server": "your-server.example.com:1818",
     "password": "replace-with-a-long-random-password",
-    "method": "aes-256-gcm"
+    "method": "aes-256-cfb"
   }
 }
 ```
@@ -74,7 +74,7 @@ go run . -mode client
 curl --proxy socks5h://127.0.0.1:1080 https://example.com
 ```
 
-SOCKS5 的成功响应表示本地请求已交给加密连接。标准 Shadowsocks 没有独立的登录确认或目标连接成功回执，因此错误密码或目标不可达会表现为后续连接关闭，不能仅凭 SOCKS5 成功响应判定密码正确。域名形式的请求在服务端解析；IP 形式直接转发。支持 TCP 半关闭，半关闭后等待剩余响应最多 30 秒。
+SOCKS5 的成功响应表示本地请求已交给加密连接。标准 Shadowsocks 没有独立的登录确认或目标连接成功回执，因此 AEAD 错误密码或目标不可达会表现为后续连接关闭；CFB 没有密码认证，错误密码通常表现为地址解析失败、连接关闭或超时，不能仅凭 SOCKS5 成功响应判定密码正确。域名形式的请求在服务端解析；IP 形式直接转发。支持 TCP 半关闭，半关闭后等待剩余响应最多 30 秒。
 
 ## 开发和构建
 

@@ -19,9 +19,9 @@ func RunServer(cfg *config.Config) error {
 			_ = listener.Close()
 		}
 	}()
-	ciphers := make([]core.Cipher, 0, len(cfg.Users))
+	ciphers := make([]core.StreamConnCipher, 0, len(cfg.Users))
 	for _, user := range cfg.Users {
-		cipher, err := core.PickCipher(user.Method, nil, user.Password)
+		cipher, err := pickCipher(user.Method, user.Password)
 		if err != nil {
 			return fmt.Errorf("create cipher for %s: %w", user.Listen, err)
 		}
@@ -35,7 +35,7 @@ func RunServer(cfg *config.Config) error {
 	errors := make(chan error, len(listeners))
 	for index, listener := range listeners {
 		log.Printf("Shadowsocks server listening on %s with %s", listener.Addr(), cfg.Users[index].Method)
-		go func(listener net.Listener, cipher core.Cipher) {
+		go func(listener net.Listener, cipher core.StreamConnCipher) {
 			errors <- acceptServerConnections(listener, cipher, cfg.Server.DialTimeoutSeconds)
 		}(listener, ciphers[index])
 	}
@@ -43,7 +43,7 @@ func RunServer(cfg *config.Config) error {
 }
 
 // acceptServerConnections accepts encrypted clients for one configured listener.
-func acceptServerConnections(listener net.Listener, cipher core.Cipher, dialTimeoutSeconds int) error {
+func acceptServerConnections(listener net.Listener, cipher core.StreamConnCipher, dialTimeoutSeconds int) error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

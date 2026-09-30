@@ -19,7 +19,7 @@ func RunClient(cfg *config.Config) error {
 		return fmt.Errorf("listen client on %s: %w", cfg.Client.Listen, err)
 	}
 	defer listener.Close()
-	cipher, err := core.PickCipher(cfg.Client.Method, nil, cfg.Client.Password)
+	cipher, err := pickCipher(cfg.Client.Method, cfg.Client.Password)
 	if err != nil {
 		return fmt.Errorf("create client cipher: %w", err)
 	}
