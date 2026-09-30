@@ -1,0 +1,1 @@
+sudo apt-get install git -y && sudo mkdir -p /data/www/ && cd /data/www/ && sudo git clone https://github.com/goodBoysss/ss-go.git && 
